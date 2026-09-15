@@ -171,56 +171,10 @@ rec show
 rec clear
 ```
 
-`rec motion` records only when the motion cascade confirms a relevant object.
-The first stage uses exported H.264/H.265 motion vectors. OpenCV MOG2 then
-checks low-resolution color samples from the current GOP, rejects global scene
-or brightness changes, and marks likely shadows separately from foreground.
-Finally, YOLOv10n must detect a person, animal, or vehicle overlapping the
-motion region. The samples come from frames already decoded for motion-vector
-extraction, so the GOP is not decoded a second time.
-
-The compressed GOP is retained as a pre-roll buffer, so a confirmed recording
-starts at the keyframe preceding the motion candidate. The detector and recorder
-share one uninterrupted RTSP connection.
-
-Uploaded recording captions use the current Telegram topic name. Renaming a
-camera topic therefore changes captions for subsequent recordings without
-changing the configured RTSP URL.
-
-While recording, YOLO checks tracked objects once every five seconds. Each
-presence check searches up to five recent frames sampled about one second
-apart, newest first. This avoids closing a recording because one particular
-frame misses a seated or partially occluded person. If all full-frame samples
-miss, the newest samples are checked again using enlarged crops around the last
-known occupant positions. Crop detections are mapped back to full-frame
-coordinates before tracking. When one of several occupants is temporarily
-missed, its last box remains a zoom-search anchor but does not count as a
-successful presence check by itself. Recording starts only from a detection
-with confidence at least 0.30 that overlaps the confirmed motion region. Once
-the recording has opened, every detected person or animal in the frame
-participates in presence tracking, including a seated occupant outside the
-original motion region. Tracking uses a lower 0.10 presence threshold and
-tolerates two missed checks, so a third consecutive miss is required to close
-the file. A vehicle still uses the 0.30 threshold and keeps the recording open
-only while motion vectors remain active and its YOLO box changes enough to
-indicate actual displacement rather than detector jitter; a parked vehicle
-therefore does not keep recording. Temporal and zoom fallbacks apply only to
-people and animals; vehicle checks use the newest full frame. Other static
-objects outside the initial motion region remain background. There is no fixed
-one-minute inactivity delay.
-
-When Watchdog starts, it checks for the official 8.95 MB `yolov10n.onnx` model
-in `media/stuff/yolov10n.onnx`. If it is missing, Watchdog downloads it from the
-[THU-MIG YOLOv10 v1.1 release](https://github.com/THU-MIG/yolov10/releases/tag/v1.1).
-An existing model with the expected SHA-256 checksum is reused without a network
-request. The model is loaded by OpenCV DNN only when the first YOLO check is
-needed, keeping startup memory use low. PyTorch and the Ultralytics Python
-package are not required. The upstream YOLOv10 repository and weights are
-distributed under AGPL-3.0.
-
-If a recording schedule exists, `Motion On` (`M1`) and `Motion Off` (`M0`)
-enable or disable motion-only recording for that schedule. Without a schedule,
-the same commands enable or disable motion event notifications.
+`rec motion` records video only when relevant motion is detected. Enable it by
+sending a motion schedule to the device topic, for example
+`rec motion *:22-07`. For an existing recording schedule, use `Motion On` or
+`M1` to enable motion-only recording and `Motion Off` or `M0` to disable it.
 
 ## Runtime Files
 
@@ -233,7 +187,6 @@ Watchdog stores local state next to the script:
 - `media/stuff/watchdog_en.json` and `watchdog_ru.json` - interface
   translations.
 - `media/stuff/logo_512x512.png` - Telegram group logo.
-- `media/stuff/yolov10n.onnx` - downloaded YOLOv10n object-detection model.
 - `media/files/` - generated snapshots and recordings.
 - `watchdog_debug.log` - optional debug log when `--debug-log` is used.
 
