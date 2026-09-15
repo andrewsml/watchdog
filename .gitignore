@@ -1,0 +1,15 @@
+.venv/
+.watchdog-build-venv/
+__pycache__/
+*.py[cod]
+
+tdlib/
+watchdog_debug.log
+build.log
+
+media/files/
+media/stuff/watchdog_config.json
+media/stuff/yolov10n.onnx
+media/stuff/yolov10n.onnx.part
+
+dist/

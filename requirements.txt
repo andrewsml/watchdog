@@ -1,0 +1,4 @@
+av==15.1.0
+numpy==2.0.2
+opencv-python-headless==5.0.0.93
+windows-capture==2.0.0; sys_platform == "win32"
