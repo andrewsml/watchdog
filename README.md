@@ -142,39 +142,65 @@ unavailable.
 
 ## Recording Schedule
 
-Send `Rec help` or `r help` in a device topic to see the complete schedule
-syntax.
+Send `rec help` in a device topic to show this help.
 
-Schedule commands:
+### Syntax
 
 ``` text
 rec or r <days>:<ranges>; <days>:<ranges>
 rec motion <days>:<ranges>; <days>:<ranges>
 rm <days>:<ranges>; <days>:<ranges>
-
-rec show
-rec clear
-rec *:off
-rec *:00-24
-Motion On or M1
-Motion Off or M0
 ```
 
-Examples:
+### Days
 
 ``` text
-rec *:22-07
-rec weekdays:09-18; weekend:off
-rec *:00-24
-rec motion *:22-07
-rec show
-rec clear
+* all days
+mon tue wed thu fri sat sun
+mon-fri range
+weekdays = mon-fri
+weekend = sat-sun
 ```
 
-`rec motion` records video only when relevant motion is detected. Enable it by
-sending a motion schedule to the device topic, for example
-`rec motion *:22-07`. For an existing recording schedule, use `Motion On` or
-`M1` to enable motion-only recording and `Motion Off` or `M0` to disable it.
+### Ranges
+
+``` text
+08-18 from 08:00 to 18:00
+22-07 overnight
+00-24 all day
+off disabled
+```
+
+### Multiple ranges
+
+``` text
+rec *:08-12,14-18
+```
+
+### Examples
+
+``` text
+rec *:22-07 - every night
+rec weekdays:09-18; weekend:off
+rec *:22-07; sat:00-24; sun:off
+rec motion *:22-07 - record only while motion is active
+```
+
+### Priority
+
+Specific days override `*`.
+
+### Commands
+
+``` text
+rec show - current schedule
+rec clear - remove schedule
+rec *:off - disable recording
+rec *:00-24 - record 24/7
+Motion On or M1 - enable motion schedule mode, or motion events if no schedule exists
+Motion Off or M0 - disable motion schedule mode, or motion events if no schedule exists
+rec help - show this help
+```
 
 ## Runtime Files
 
