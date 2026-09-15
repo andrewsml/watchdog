@@ -7,7 +7,8 @@ Watchdog is a Telegram-controlled video surveillance script based on
 
 It connects webcams, screens, and RTSP cameras to a private Telegram forum
 group. Each configured device gets its own topic for video calls, snapshots,
-RTMP streams, motion detection, and scheduled recordings.
+RTMP streams, motion detection, and scheduled recordings. Recorded videos are
+saved in the Telegram group.
 
 On the first successful Telegram login, LibTam automatically requests a free
 two-month trial license. When it expires, use the Telegram bot
@@ -22,17 +23,17 @@ You can download a ready-to-run version of Watchdog built with Nuitka from the
 Choose `watchdog-windows-x86_64.zip` for Windows or
 `watchdog-linux-x86_64.zip` for Linux and extract the complete archive.
 
-Run the initial setup with the launcher from the extracted directory:
+Start Watchdog with the launcher from the extracted directory:
 
 ``` text
-Windows: start_watchdog.bat --setup
-Linux:   ./start_watchdog.sh --setup
+Windows: start_watchdog.bat
+Linux:   ./start_watchdog.sh
 ```
 
-The setup asks for your Telegram phone number and lets you add cameras, screens,
-microphones, or RTSP sources. After setup, start Watchdog normally with
-`start_watchdog.bat` on Windows or `./start_watchdog.sh` on Linux. Keep the
-extracted directory structure unchanged.
+On the first run, enter your Telegram phone number and the authorization code
+received in Telegram. Watchdog creates a private Telegram group where you can
+add webcams, screens, microphones, and RTSP sources. Keep the extracted
+directory structure unchanged.
 
 On Windows, install the
 [Microsoft Visual C++ Redistributable for Visual Studio 2022 (x64)](https://aka.ms/vs/17/release/14.44.35211/VC_redist.x64.exe)
@@ -41,7 +42,8 @@ before the first launch.
 ## Run from Source
 
 Create an isolated Python environment, install the dependencies, install the
-LibTam wheel for your platform, configure the cameras, then run `watchdog.py`.
+LibTam wheel for your platform, then run `watchdog.py`. Devices can be added
+from the private Telegram group created by Watchdog.
 
 Linux installation requires Ubuntu 24.04 or newer.
 
@@ -62,95 +64,20 @@ python3 -m pip install -r requirements.txt
 python3 -m pip install 'libtam @ https://github.com/andrewsml/libtam/releases/download/v1.0.0/libtam-1.0.0-py3-none-linux_x86_64.whl'
 # for Windows: python3 -m pip install "libtam @ https://github.com/andrewsml/libtam/releases/download/v1.0.0/libtam-1.0.0-py3-none-win_amd64.whl"
 
-python3 watchdog.py --setup --login +78881234567
-python3 watchdog.py --lang en
+python3 watchdog.py
 ```
 
 Telegram authorization uses a phone number in international format. On the
 first run, enter the Telegram login code from your mobile Telegram client.
 
-The setup command enumerates local cameras, microphones, and screens and can
-also add RTSP sources. It saves the resulting configuration to
-`media/stuff/watchdog_config.json`.
-
-## Building Portable Archives
-
-Run the release builder on a 64-bit Windows machine:
-
-``` powershell
-python build_portable.py
-```
-
-The default command creates both archives in `dist/portable/`:
-
-``` text
-watchdog-windows-x86_64.zip
-watchdog-linux-x86_64.zip
-```
-
-The Windows executable is compiled locally. The Linux executable is compiled
-natively inside the `Ubuntu-24.04` WSL distribution; Nuitka does not
-cross-compile a Linux executable from Windows. The builder creates temporary
-build directories and keeps persistent Windows and Linux virtual environments
-under `.watchdog-build-venv/` in the directory from which it was launched. On
-the first run it installs Nuitka and the application dependencies, and
-uses the local LibTam wheels from the adjacent `tam/dist/wheels` directory when
-they are available. Otherwise it downloads the v1.0.0 wheels from the LibTam
-GitHub release. With the default MinGW64 compiler, use 64-bit CPython 3.9-3.12.
-Later runs verify the environment marker and imports and reuse the installed
-packages without running `pip install`. Use `--refresh-build-venv` to update the
-cached packages or `--build-venv-dir PATH` to choose another cache directory.
-
-The builder checks for `python3-venv`, `python3-dev`, `build-essential`,
-`patchelf`, and `ccache` in WSL and installs missing packages through `apt-get`. Pass
-`--no-wsl-bootstrap` if the WSL environment must not be changed. Useful
-target-specific commands are:
-
-``` powershell
-python build_portable.py --target windows
-python build_portable.py --target linux --wsl-distro Ubuntu-24.04
-python build_portable.py --refresh-build-venv
-python build_portable.py --dry-run
-```
-
-The Windows binary uses `logo_512x512.ico`; the builder accepts an alternative
-through `--icon`. Every archive contains the standalone executable and
-libraries, translations, logo files, the verified YOLO model, README, and a
-short portable quick-start file. It deliberately excludes Telegram `tdlib`
-state, `media/stuff/watchdog_config.json`, `media/files`, partial model
-downloads, and debug logs. Archive validation fails if any of those paths gets
-into a release.
-
-The console output is divided into numbered build stages. If a stage fails,
-its temporary directory is retained under `dist/portable/.build-work/` instead
-of being deleted. `BUILD_FAILURE.txt` in that directory contains the exception,
-traceback, executed commands, environment details, and a file inventory. Nuitka
-also writes `nuitka-compilation-report.xml` there. When an executable was
-already created, the final error output prints the exact command that reruns
-its portable self-test and identifies which import or native library failed.
-
-For PyAV wheels that contain a compiled extension and an identically named
-Cython shadow source, the builder creates a sanitized temporary package tree.
-Only the shadow source is removed from that copy, forcing Nuitka to package the
-tested wheel extension instead of compiling code that imports `cython` at
-runtime. The persistent venv itself is never modified. NumPy and OpenCV are
-included from their entry modules rather than forcing their complete test
-suites into the executable.
-
-Windows paths sent to WSL are normalized to forward-slash form before calling
-`wslpath`. This avoids Linux shell escape handling turning an unquoted path such
-as `D:\temp\...` into an invalid `D:temp...` value when the builder is launched
-through Python's subprocess API.
-
 ## Command Line
 
 ``` bash
-python watchdog.py --login +78881234567 --lang en --video-size 480p
+python watchdog.py
 ```
 
 Options:
 
-- `--setup` - authenticate the Telegram account and add video sources.
 - `--login` - Telegram account phone number in international format. The saved
   configuration is used when this option is omitted.
 - `--lang` - interface language. Supported values: `en`, `ru`. Default: `en`.
